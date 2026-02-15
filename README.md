@@ -96,7 +96,12 @@ Architecture **3-tiers** :
   ansible-playbook playbooks/site.yml --syntax-check
   ansible-playbook playbooks/tests.yml --syntax-check
   ```
-
+  
+- **Lancer la commande suivante pour éviter les erreurs API** :
+  ```bash
+  docker exec -d ansible-db1 bash -c 'cd /opt/app && ./start-nodejs.sh >> /var/log/nodejs-app.log 2>&1'
+  ```
+  
 - **Lancer les tests automatisés** :
   ```bash
   ansible-playbook playbooks/tests.yml
