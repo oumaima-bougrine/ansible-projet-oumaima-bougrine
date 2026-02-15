@@ -1,0 +1,58 @@
+---
+- name: Install Node.js and npm
+  apt:
+    name:
+      - nodejs
+      - npm
+    state: present
+    update_cache: yes
+
+- name: Create app directory
+  file:
+    path: "{{ nodejs_app_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Copy package.json
+  copy:
+    src: package.json
+    dest: "{{ nodejs_app_dir }}/package.json"
+    mode: '0644'
+  notify: restart nodejs
+
+- name: Copy app.js
+  copy:
+    src: app.js
+    dest: "{{ nodejs_app_dir }}/app.js"
+    mode: '0644'
+  notify: restart nodejs
+
+- name: Install npm dependencies
+  npm:
+    path: "{{ nodejs_app_dir }}"
+    state: present
+  notify: restart nodejs
+
+- name: Deploy Node.js start script
+  template:
+    src: start-nodejs.sh.j2
+    dest: "{{ nodejs_app_dir }}/start-nodejs.sh"
+    mode: '0750'
+  notify: restart nodejs
+
+- name: Ensure log file exists for Node.js app
+  file:
+    path: /var/log/nodejs-app.log
+    state: touch
+    mode: '0644'
+
+- name: Check if Node.js app is already running
+  shell: pgrep -f 'node.*app.js' || true
+  register: nodejs_running
+  changed_when: false
+
+- name: Start Node.js app
+  shell: nohup {{ nodejs_app_dir }}/start-nodejs.sh >> /var/log/nodejs-app.log 2>&1 &
+  args:
+    executable: /bin/bash
+  when: nodejs_running.stdout == ''

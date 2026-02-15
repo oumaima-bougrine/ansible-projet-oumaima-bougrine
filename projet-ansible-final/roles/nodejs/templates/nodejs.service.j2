@@ -1,0 +1,19 @@
+[Unit]
+Description=Node.js API Express
+After=network.target postgresql.service
+
+[Service]
+ExecStart=/usr/bin/node {{ nodejs_app_dir }}/app.js
+Restart=always
+User=root
+WorkingDirectory={{ nodejs_app_dir }}
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=PGHOST=127.0.0.1
+Environment=PGPORT=5432
+Environment=PGDATABASE={{ postgres_db_name }}
+Environment=PGUSER={{ db_user }}
+Environment=PGPASSWORD={{ db_password }}
+
+[Install]
+WantedBy=multi-user.target

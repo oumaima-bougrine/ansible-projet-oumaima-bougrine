@@ -1,0 +1,10 @@
+---
+- name: restart nginx
+  shell: nginx -s stop && nginx
+  args:
+    executable: /bin/bash
+
+- name: reload nginx
+  shell: nginx -s reload || true
+  args:
+    executable: /bin/bash

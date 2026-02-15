@@ -1,0 +1,16 @@
+# Ansible (obligatoire pour la correction)
+ansible_python_interpreter: /usr/bin/python3
+
+# PostgreSQL
+postgres_db_name: appdb
+postgres_user: "{{ db_user }}"
+postgres_password: "{{ db_password }}"
+
+# Node.js
+nodejs_app_dir: /opt/app
+nodejs_service_name: nodejs-app
+
+# Nginx
+nginx_port: 80
+nginx_server_name: localhost
+backend_host: db1

@@ -1,0 +1,11 @@
+#!/bin/bash
+# Démarrage de l'API Node.js (conteneurs sans systemd)
+echo "Node start script invoked at $(date)" >> /var/log/nodejs-app.log
+export NODE_ENV=production
+export PORT=3000
+export PGHOST=127.0.0.1
+export PGPORT=5432
+export PGDATABASE='{{ postgres_db_name | replace("'", "'\"'\"'") }}'
+export PGUSER='{{ db_user | replace("'", "'\"'\"'") }}'
+export PGPASSWORD='{{ db_password | replace("'", "'\"'\"'") }}'
+cd {{ nodejs_app_dir }} && exec /usr/bin/node app.js

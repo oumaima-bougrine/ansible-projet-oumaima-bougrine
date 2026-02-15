@@ -1,0 +1,5 @@
+---
+- name: restart nodejs
+  shell: pkill -f 'node.*app.js' || true && nohup {{ nodejs_app_dir }}/start-nodejs.sh >> /var/log/nodejs-app.log 2>&1 &
+  args:
+    executable: /bin/bash

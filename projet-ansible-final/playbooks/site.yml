@@ -1,0 +1,36 @@
+---
+- name: Apply common configuration to all servers
+  hosts: all_servers
+  gather_facts: true
+  vars_files:
+    - ../group_vars/all/vars.yml
+    - ../group_vars/all/vault.yml
+  roles:
+    - common
+
+- name: Configure web servers (Nginx)
+  hosts: webservers
+  gather_facts: true
+  vars_files:
+    - ../group_vars/all/vars.yml
+    - ../group_vars/all/vault.yml
+  roles:
+    - nginx
+
+- name: Configure PostgreSQL database
+  hosts: appservers
+  gather_facts: true
+  vars_files:
+    - ../group_vars/all/vars.yml
+    - ../group_vars/all/vault.yml
+  roles:
+    - postgresql
+
+- name: Configure Node.js backend
+  hosts: appservers
+  gather_facts: true
+  vars_files:
+    - ../group_vars/all/vars.yml
+    - ../group_vars/all/vault.yml
+  roles:
+    - nodejs

@@ -1,0 +1,118 @@
+---
+# Playbook de tests pour le projet 3-tiers
+# Exécution :
+# ansible-playbook playbooks/tests.yml
+# Si Node.js n'est pas lancé : ansible-playbook playbooks/tests.yml -e nodejs_start_via_docker=true
+
+############################################
+# Optionnel : démarrer Node.js dans db1
+############################################
+- name: Démarrer Node.js dans db1 (optionnel)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../group_vars/all/vars.yml
+  tasks:
+    - name: Lancer Node.js dans le conteneur db1
+      ansible.builtin.command: >
+        docker exec -d ansible-db1
+        bash -c 'cd {{ nodejs_app_dir }} && ./start-nodejs.sh >> /var/log/nodejs-app.log 2>&1'
+      changed_when: true
+      failed_when: false
+      when: nodejs_start_via_docker | default(false) | bool
+
+    - name: Attendre 3 secondes pour que Node.js démarre
+      ansible.builtin.pause:
+        seconds: 3
+      when: nodejs_start_via_docker | default(false) | bool
+
+############################################
+# Test 1 - Pages web accessibles (Nginx)
+############################################
+- name: Test 1 - Page web accessible (webservers)
+  hosts: webservers
+  gather_facts: false
+  tasks:
+    - name: Vérifier que Nginx répond en 200
+      ansible.builtin.uri:
+        url: http://localhost
+        status_code: 200
+      register: web_result
+
+    - name: Afficher résultat test page web
+      ansible.builtin.debug:
+        msg: "Page web OK - status {{ web_result.status }}"
+
+############################################
+# Test 2 - Node.js API backend accessible
+############################################
+- name: Test Node.js API backend accessible
+  hosts: appservers
+  gather_facts: false
+  tasks:
+    - name: Wait for Node.js API to be ready (via localhost)
+      wait_for:
+        host: 127.0.0.1
+        port: 3000
+        timeout: 30
+      delegate_to: localhost
+      ignore_errors: true
+
+    - name: Vérifier endpoint API /
+      ansible.builtin.uri:
+        url: http://127.0.0.1:3000/
+        status_code: 200
+      delegate_to: localhost
+      register: api_root
+
+    - name: Vérifier endpoint API /users
+      ansible.builtin.uri:
+        url: http://127.0.0.1:3000/users
+        status_code: 200
+      delegate_to: localhost
+      register: api_users
+
+    - name: Afficher résultat test API
+      ansible.builtin.debug:
+        msg: "API / -> {{ api_root.status }}, /users -> {{ api_users.status }}"
+
+############################################
+# Test 3 - Processus Nginx (webservers)
+############################################
+- name: Test 3 - Processus Nginx présent
+  hosts: webservers
+  gather_facts: false
+  tasks:
+    - name: Vérifier que Nginx tourne
+      ansible.builtin.shell: pgrep -x nginx
+      register: nginx_proc
+      changed_when: false
+      failed_when: nginx_proc.rc != 0
+
+    - name: Afficher résultat Nginx
+      ansible.builtin.debug:
+        msg: "Processus Nginx présent"
+
+############################################
+# Test 4 - Processus PostgreSQL et Node.js (db1)
+############################################
+- name: Test 4 - Processus PostgreSQL et Node.js
+  hosts: appservers
+  gather_facts: false
+  tasks:
+    - name: Vérifier que PostgreSQL tourne
+      ansible.builtin.shell: pgrep -fa postgres
+      register: pg_proc
+      changed_when: false
+      failed_when: pg_proc.rc != 0
+
+    - name: Vérifier que Node.js (app.js) tourne
+      ansible.builtin.shell: pgrep -f "node.*app.js"
+      register: node_proc
+      changed_when: false
+      failed_when: node_proc.rc != 0
+
+    - name: Afficher résultat processus
+      ansible.builtin.debug:
+        msg: "PostgreSQL et Node.js présents"

@@ -1,0 +1,10 @@
+---
+- name: restart postgresql
+  shell: pg_ctlcluster 15 main restart
+  args:
+    warn: false
+
+- name: reload postgresql
+  shell: pg_ctlcluster 15 main reload
+  args:
+    warn: false
