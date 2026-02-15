@@ -51,7 +51,7 @@ Architecture **3-tiers** :
 
 1. **Démarrer les conteneurs** (depuis le répertoire contenant `docker-compose.yml`) :
    ```bash
-   cd /chemin/vers/3IASC-ansible
+   cd /chemin/vers/ansible-projet-oumaima-bougrine
    docker compose build
    docker compose up -d
    ```
